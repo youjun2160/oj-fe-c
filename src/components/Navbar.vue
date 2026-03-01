@@ -11,8 +11,8 @@
       <img v-if="isLogin" class="oj-message" @click="goMessage" src="@/assets/message/message.png" />
       <el-dropdown v-if="isLogin">
         <div class="oj-navbar-name">
-          <img class="oj-head-image" v-if="isLogin" src="@/assets/images/headimage.jpg" />
-          <span>小比特</span>
+          <img class="oj-head-image" v-if="isLogin" :src="userInfo.headImage" />
+          <span>{{ userInfo.nickName }}</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
@@ -40,17 +40,23 @@
 </template>
 
 <script setup>
-import { logoutService } from '@/apis/user';
+import { getUserInfoService, logoutService } from '@/apis/user';
 import router from '@/router';
 import { getToken, removeToken } from '@/utils/cookie';
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 
-const isLogin = ref(true)
+const isLogin = ref(false)
+const userInfo = reactive({
+  nickName: '',
+  headImage: ''
+})
 
-function checkLogin() {
+async function checkLogin() {
   if(getToken()) {
     //1.判断当前token是否过期
     //2.将当前用户的头像，昵称返回
+    const userInfoRes = await getUserInfoService()
+    Object.assign(userInfo, userInfoRes.data)
     isLogin.value = true;
   }
   
@@ -73,6 +79,7 @@ async function handleLogout() {
   )
   await logoutService()
   removeToken()
+  isLogin.value = false
 }
 
 </script>
